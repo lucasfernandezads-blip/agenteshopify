@@ -1,14 +1,14 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ShopifyService } from '../services/shopifyService';
 import { BotConversaService } from '../services/botconversaService';
 import { LearningStore } from './learningStore';
 
 export class SalesAgent {
-  private ai: GoogleGenAI | null = null;
+  private genAI: GoogleGenerativeAI | null = null;
   private shopifyService: ShopifyService;
   private botConversaService: BotConversaService;
   private learningStore: LearningStore;
-  private modelName: string = 'gemini-2.5-flash';
+  private modelName: string = 'gemini-1.5-flash';
 
   constructor(shopifyService: ShopifyService, botConversaService: BotConversaService, learningStore: LearningStore) {
     this.shopifyService = shopifyService;
@@ -16,9 +16,9 @@ export class SalesAgent {
     this.learningStore = learningStore;
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey && apiKey !== 'sua_chave_gemini_api_aqui') {
+    if (apiKey && apiKey !== 'sua_chave_gemini_api_aqui' && apiKey.length > 5) {
       try {
-        this.ai = new GoogleGenAI({ apiKey });
+        this.genAI = new GoogleGenerativeAI(apiKey);
       } catch (err) {
         console.error('[SalesAgent] Erro ao inicializar SDK do Gemini:', err);
       }
@@ -41,13 +41,13 @@ export class SalesAgent {
 
     // 3. Obtém dados de configuração da loja
     const storeConfig = this.learningStore.getStoreConfig();
-    const agentName = storeConfig.agent_name || 'Lucas - Consultor de Móveis';
-    const storeName = storeConfig.store_name || 'Móveis & Decoração Design';
+    const agentName = storeConfig.agent_name || 'Lucas - Consultor de Vendas';
+    const storeName = storeConfig.store_name || 'Sua Loja de Móveis';
 
     // 4. Monta o Prompt de Sistema com Persona de Vendedor de Móveis
     const systemPrompt = `
 Você é ${agentName}, vendedor consultivo de elite da loja de móveis "${storeName}".
-Sua meta é atender o cliente no WhatsApp com excelência, apresentar móveis ideais do catálogo da Shopify, tirar todas as dúvidas técnicas (medidas, tecidos, madeira, montagem, prazos), contornar objeções de venda (preço, frete, receio de comprar móvel online) e sugerir produtos complementares (ex: se comprar mesa de jantar, sugerir cadeiras ou buffet).
+Sua meta é atender o cliente no WhatsApp com excelência, apresentar móveis ideais do catálogo da Shopify, tirar todas as dúvidas técnicas (medidas, tecidos, madeira, montagem, prazos), contornar objeções de venda (preço, frete, receio de comprar móvel online) e sugerir produtos complementares.
 
 Siga rigorosamente estas diretrizes no WhatsApp:
 - Seja extremamente cordial, profissional e persuasivo.
@@ -69,14 +69,11 @@ MENSAGEM DO CLIENTE:
     let responseText = '';
 
     // 5. Executa a IA (Gemini API) ou Fallback com motor de vendas inteligente
-    if (this.ai) {
+    if (this.genAI) {
       try {
-        const response = await this.ai.models.generateContent({
-          model: this.modelName,
-          contents: systemPrompt,
-        });
-
-        responseText = response.text || '';
+        const model = this.genAI.getGenerativeModel({ model: this.modelName });
+        const result = await model.generateContent(systemPrompt);
+        responseText = result.response.text() || '';
       } catch (error: any) {
         console.error('[SalesAgent] Erro na chamada do Gemini API:', error.message);
         responseText = this.generateRuleBasedFallback(customerName, messageText, shopifyProducts, storeConfig);
@@ -103,9 +100,6 @@ MENSAGEM DO CLIENTE:
     return responseText;
   }
 
-  /**
-   * Trata intenções e aplica tags automaticamente no BotConversa
-   */
   private async handleTaggingSignals(subscriberId: string, message: string): Promise<void> {
     const msgLower = message.toLowerCase();
 
@@ -123,14 +117,11 @@ MENSAGEM DO CLIENTE:
     }
   }
 
-  /**
-   * Resposta de fallback comercial de alta conversão para simulações e caso a API não responda
-   */
   private generateRuleBasedFallback(customerName: string | undefined, message: string, products: any[], storeConfig: any): string {
     const greeting = customerName ? `Olá, *${customerName}*! Tudo bem?` : 'Olá! Tudo bem?';
     
     if (products.length === 0) {
-      return `${greeting} Sou o Lucas, consultor especialista aqui da *${storeConfig.store_name || 'Móveis & Decoração'}*.
+      return `${greeting} Sou o Lucas, consultor especialista de móveis.
 
 Percebi que você busca opções incríveis para a sua casa! Para que eu possa selecionar os melhores modelos em nosso catálogo, qual ambiente você está renovando no momento (sala de estar, sala de jantar ou quarto)?
 

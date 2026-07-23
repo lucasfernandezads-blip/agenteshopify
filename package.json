@@ -6,8 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "test": "node --test"
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
   },
   "keywords": [
     "whatsapp",
@@ -15,13 +14,12 @@
     "shopify",
     "ai-agent",
     "gemini",
-    "ecommerce",
-    "sales-bot"
+    "ecommerce"
   ],
   "author": "Antigravity AI",
   "license": "MIT",
   "dependencies": {
-    "@google/genai": "^0.1.1",
+    "@google/generative-ai": "^0.21.0",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
