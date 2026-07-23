@@ -17,13 +17,19 @@ export class ConfigService {
   private config: AppConfig;
 
   constructor() {
-    this.configPath = path.join(process.cwd(), 'data', 'store_config.json');
+    // Em ambientes serverless (Vercel), usaremos a pasta /tmp se data não for gravável
+    const isVercel = Boolean(process.env.VERCEL);
+    const dataDir = isVercel ? '/tmp' : path.join(process.cwd(), 'data');
 
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    if (!isVercel && !fs.existsSync(dataDir)) {
+      try {
+        fs.mkdirSync(dataDir, { recursive: true });
+      } catch (e) {
+        console.warn('[ConfigService] Usando diretório temporário para armazenamento.');
+      }
     }
 
+    this.configPath = path.join(dataDir, 'store_config.json');
     this.config = this.loadConfig();
   }
 
@@ -34,10 +40,9 @@ export class ConfigService {
         return JSON.parse(raw);
       }
     } catch (err) {
-      console.error('[ConfigService] Erro ao ler arquivo de configuração:', err);
+      console.warn('[ConfigService] Carregando a partir de Variáveis de Ambiente da Vercel / .env');
     }
 
-    // Padrão zerado / configurável via .env ou Painel Web
     return {
       storeName: process.env.STORE_NAME || 'Minha Loja de Móveis',
       agentName: process.env.AGENT_NAME || 'Lucas - Consultor de Vendas',
@@ -60,16 +65,14 @@ export class ConfigService {
       ...newConfig
     };
 
-    // Atualiza também as variáveis de ambiente em memória
     if (newConfig.shopifyShopDomain) process.env.SHOPIFY_SHOP_DOMAIN = newConfig.shopifyShopDomain;
     if (newConfig.shopifyAccessToken) process.env.SHOPIFY_ACCESS_TOKEN = newConfig.shopifyAccessToken;
     if (newConfig.botConversaApiKey) process.env.BOTCONVERSA_API_KEY = newConfig.botConversaApiKey;
 
     try {
       fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf-8');
-      console.log('[ConfigService] Configurações da Shopify e Loja atualizadas com sucesso!');
     } catch (err) {
-      console.error('[ConfigService] Erro ao salvar configurações:', err);
+      console.warn('[ConfigService] Vercel Serverless: Configurações mantidas em memória para esta execução.');
     }
 
     return this.getConfig();

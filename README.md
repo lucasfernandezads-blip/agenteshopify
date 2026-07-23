@@ -1,121 +1,90 @@
 # 🤖 Agente de IA Comercial para WhatsApp (BotConversa) + Shopify
 
-Este projeto é um **Agente Comercial de Inteligência Artificial** desenvolvido para atuar como vendedor especialista no nicho de móveis e decoração no WhatsApp. Ele se conecta via **Webhook com o BotConversa** e realiza consultas em tempo real na **API da Shopify**, apresentando produtos, tirando dúvidas de medidas/materiais, contornando objeções de venda e aprendendo continuamente com as conversas.
+Este projeto é um **Agente Comercial de Inteligência Artificial** para vendas de móveis e decoração no WhatsApp. Ele se conecta via **Webhook com o BotConversa** e realiza consultas em tempo real na **API da Shopify**, apresentando produtos, tirando dúvidas de medidas/materiais, contornando objeções de venda e aprendendo continuamente com as conversas.
+
+A aplicação conta com um **Painel de Controle Web Completo** e está **100% otimizada para ser publicada online via GitHub e Vercel**!
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## ⚡ Guia Rápido: Como Publicar no GitHub e Vercel (Passo a Passo)
 
-- **Node.js & TypeScript**: Servidor backend rápido e assíncrono.
-- **Express.js**: Gestão de rotas e webhooks.
-- **Google Gemini API**: Inteligência artificial para raciocínio comercial, linguagem natural e persuasão em vendas.
-- **Shopify GraphQL / REST API**: Consulta em tempo real do catálogo de móveis, variações de cor/tamanho, estoque e geração de links de checkout.
-- **BotConversa API**: Recepção de webhooks de mensagens e envio de respostas, imagens de produtos e etiquetamento (tags) no WhatsApp.
-- **Continuous Learning RAG Store**: Base de conhecimento inicial + sistema de memória persistente para aprendizado contínuo.
+### 1. Subir o Projeto para o GitHub
+
+No terminal dentro desta pasta do projeto, execute:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit - Agente IA WhatsApp Shopify"
+git branch -M main
+git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+git push -u origin main
+```
 
 ---
 
-## 📁 Estrutura do Projeto
+### 2. Implantar na Vercel (1-Clique)
+
+1. Acesse **[Vercel.com](https://vercel.com)** e faça login com sua conta do GitHub.
+2. Clique no botão **"Add New..." > "Project"**.
+3. Selecione o repositório do seu GitHub (`SEU_REPOSITORIO`).
+4. A Vercel detectará automaticamente o arquivo `vercel.json` e a pasta `api/`!
+5. **Configurar Variáveis de Ambiente na Vercel**:
+   - Vá na seção **Environment Variables** e insira as variáveis:
+     - `GEMINI_API_KEY`: Sua chave da API do Google Gemini.
+     - `SHOPIFY_SHOP_DOMAIN`: Seu domínio `sua-loja.myshopify.com`.
+     - `SHOPIFY_ACCESS_TOKEN`: Token `shpat_xxxxxxxx`.
+     - `BOTCONVERSA_API_KEY`: Token de API do BotConversa.
+6. Clique em **Deploy**!
+
+Sua aplicação estará no ar em poucos segundos em um domínio HTTPS oficial como:
+`https://meu-agente-ia.vercel.app`
+
+---
+
+### 3. Conectar a Vercel com o BotConversa
+
+1. No seu painel da Vercel, copie a URL do seu aplicativo: `https://meu-agente-ia.vercel.app`
+2. No **BotConversa**, vá na sua Automação/Fluxo e crie um bloco de **Webhook (POST)**.
+3. Coloque a URL:
+   ```
+   https://meu-agente-ia.vercel.app/api/webhook/botconversa
+   ```
+4. Pronto! Todas as mensagens recebidas pelo seu número no BotConversa serão respondidas automaticamente pelo Agente de IA!
+
+---
+
+## 💻 Estrutura Otimizada para Vercel Serverless
 
 ```
 whatsapp-shopify-ai-agent/
-├── config/
-│   └── furniture_seller_config.json   # Configuração inicial (Persona, Objeções, Políticas, FAQs)
-├── data/
-│   ├── knowledge_memory.json           # Memória de conhecimento acumulada (RAG)
-│   └── conversation_logs.json          # Histórico de conversas do WhatsApp
+├── api/
+│   └── index.ts                        # Entrypoint das Vercel Serverless Functions
+├── public/                             # Frontend Painel Web (HTML/CSS/JS)
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
 ├── src/
 │   ├── agent/
-│   │   ├── learningStore.ts            # Motor de aprendizado contínuo e RAG
-│   │   └── salesAgent.ts               # Núcleo do Agente de Vendas (Gemini + Shopify Tools)
+│   │   ├── learningStore.ts            # Memória RAG Serverless
+│   │   └── salesAgent.ts               # Núcleo de Vendas com Gemini + Shopify
 │   ├── services/
-│   │   ├── botconversaService.ts       # Envio de mensagens, imagens e tags via BotConversa API
-│   │   └── shopifyService.ts           # Consulta ao catálogo da Shopify
-│   ├── types/
-│   │   └── index.ts                    # Interfaces de dados TypeScript
-│   ├── test/
-│   │   └── agent.test.ts               # Teste de simulação do fluxo de vendas
-│   └── server.ts                       # Servidor Express e endpoint de Webhook
-├── .env.example                        # Template de variáveis de ambiente
+│   │   ├── configService.ts            # Gerenciador de Credenciais Multiloja
+│   │   ├── botconversaService.ts       # Envio WhatsApp & Tags
+│   │   └── shopifyService.ts           # Consulta Catálogo GraphQL
+│   └── server.ts                       # Servidor local Express
+├── vercel.json                         # Configuração de Roteamento da Vercel
 ├── package.json
-└── tsconfig.json
+└── README.md
 ```
 
 ---
 
-## ⚙️ Como Configurar
+## 🧪 Rodar Localmente antes de Enviar ao GitHub
 
-### 1. Instalar as Dependências
-
-No terminal da pasta do projeto, execute:
 ```bash
 npm install
-```
-
-### 2. Configurar o Arquivo `.env`
-
-Copie o arquivo `.env.example` para `.env` e preencha suas chaves:
-```bash
-cp .env.example .env
-```
-
-Campos a preencher:
-- `GEMINI_API_KEY`: Sua chave da API do Google Gemini.
-- `SHOPIFY_SHOP_DOMAIN`: Domínio da sua loja (ex: `sua-loja-moveis.myshopify.com`).
-- `SHOPIFY_ACCESS_TOKEN`: Token de Acesso da API de Admin/Storefront da Shopify.
-- `BOTCONVERSA_API_KEY`: Token de API gerado na sua conta do BotConversa (*Configurações > API*).
-
----
-
-## 🔗 Como Conectar com o BotConversa
-
-1. **Expor o servidor (Local/Servidor)**:
-   - Para rodar localmente e testar no WhatsApp, utilize o [ngrok](https://ngrok.com/):
-     ```bash
-     ngrok http 3000
-     ```
-   - Você receberá uma URL pública como: `https://xxxx.ngrok-free.app`
-
-2. **Configurar o Webhook no BotConversa**:
-   - Vá no seu painel do **BotConversa** em **Automações** ou **Fluxos**.
-   - No fluxo de atendimento inicial (ou quando o lead solicitar atendimento comercial), adicione um bloco de **Webhook (POST)**.
-   - Coloque a URL: `https://xxxx.ngrok-free.app/api/webhook/botconversa`
-   - O BotConversa passará os dados do assinante (`subscriber.id`, `subscriber.phone`, `text`) para a IA.
-   - O servidor responde `200 OK` instantaneamente e envia a resposta de vendas direto para o WhatsApp do cliente através da API do BotConversa!
-
----
-
-## 🧠 Aprendizado Contínuo (Continuous Learning)
-
-### 1. Configuração Inicial
-O arquivo [`config/furniture_seller_config.json`](file:///C:/Users/lusca/.gemini/antigravity/scratch/whatsapp-shopify-ai-agent/config/furniture_seller_config.json) é onde você insere todas as regras essenciais da sua loja de móveis (políticas de frete, garantias, tipos de tecido, formas de pagamento e gatilhos de vendas).
-
-### 2. Aprendizado em Tempo Real com Conversas
-Todas as mensagens trocadas com clientes ficam registradas em `data/conversation_logs.json`.
-
-### 3. Ensinar Novos Conhecimentos via API Admin
-Você ou sua equipe podem enviar novas respostas ou correções para o robô a qualquer momento usando a rota:
-```http
-POST /api/learning/ingest
-Content-Type: application/json
-
-{
-  "category": "objection",
-  "topic": "tecido impermeável pet friendly",
-  "resolution": "Trabalhamos com o tecido Aquablock e Linho Sintético especial de alta densidade que resiste a arranhões de pets."
-}
-```
-
----
-
-## 🚀 Como Executar e Testar
-
-### Rodar em Desenvolvimento:
-```bash
 npm run dev
 ```
 
-### Rodar o Teste Automatizado de Vendas:
-```bash
-npx ts-node src/test/agent.test.ts
-```
+Acesse no navegador: **`http://localhost:3000`**
